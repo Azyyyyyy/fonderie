@@ -12,12 +12,12 @@ namespace INPC.Generator
 	[Generator]
 	public class INPCGenerator : ISourceGenerator
 	{
-		public void Initialize(InitializationContext context)
+		public void Initialize(GeneratorInitializationContext context)
 		{
 			// No initialization required for this one
 		}
 
-		public void Execute(SourceGeneratorContext context)
+		public void Execute(GeneratorExecutionContext context)
 		{
 			// Search for the GeneratedPropertyAttribute symbol
 			var _generatedPropertyAttributeSymbol =
@@ -49,7 +49,7 @@ namespace INPC.Generator
 					{
 						using (builder.BlockInvariant($"partial class {type.Key.Name} : INotifyPropertyChanged"))
 						{
-							builder.AppendLineInvariant($"public event PropertyChangedEventHandler PropertyChanged;");
+							builder.AppendLineInvariant($"public event PropertyChangedEventHandler? PropertyChanged;");
 
 							foreach (var fieldInfo in type)
 							{
@@ -64,10 +64,13 @@ namespace INPC.Generator
 
 									using (builder.BlockInvariant($"set"))
 									{
-										builder.AppendLineInvariant($"var previous = {fieldInfo.Name};");
-										builder.AppendLineInvariant($"{fieldInfo.Name} = value;");
-										builder.AppendLineInvariant($"PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof({propertyName})));");
-										builder.AppendLineInvariant($"On{propertyName}Changed(previous, value);");
+										using (builder.BlockInvariant($"if ({fieldInfo.Name} != value)"))
+										{
+											builder.AppendLineInvariant($"var previous = {fieldInfo.Name};");
+											builder.AppendLineInvariant($"{fieldInfo.Name} = value;");
+											builder.AppendLineInvariant($"PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof({propertyName})));");
+											builder.AppendLineInvariant($"On{propertyName}Changed(previous, value);");
+										}
 									}
 								}
 
