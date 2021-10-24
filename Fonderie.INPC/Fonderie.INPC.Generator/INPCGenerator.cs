@@ -58,6 +58,10 @@ namespace INPC.Generator
 								// Uppercase name for camel case
 								propertyName = propertyName[0].ToString().ToUpperInvariant() + propertyName.Substring(1);
 
+								foreach (var attribute in fieldInfo.GetAttributes().Where(x => x.ToString() != "Fonderie.GeneratedPropertyAttribute"))
+								{
+									builder.AppendLineInvariant("[" + attribute + "]");
+								}
 								using (builder.BlockInvariant($"public {fieldInfo.Type} {propertyName}"))
 								{
 									builder.AppendLineInvariant($"get => {fieldInfo.Name};");
